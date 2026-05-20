@@ -10,7 +10,7 @@ The working objective is:
 - Output: predicted `Cardinality`
 - Metric: Mean Q-Error
 
-The user reported an online score of about `4.88061` on the original submission, then iterated through many experimental routes. The best local OOF result reached so far is about `3.67916`, but online gains were much smaller than local improvements, so overfitting to local OOF is a real risk.
+The user reported an online score of about `4.88061` on the original submission, then iterated through many experimental routes. Recent online scores confirmed the value-target-encoding direction: `submission_value_te_id_heavy_on_isotonic.csv` scored `3.24732`, the more aggressive `submission_value_te_column_capped_on_isotonic.csv` scored `3.15977`, and `submission_value_te_capped_pair02_on_isotonic.csv` scored `3.15321`. Pair-token follow-ups were marginal: `submission_value_te_midopt_pair04_on_isotonic.csv` scored `3.15393`, and `submission_value_te_opt6_pair04_on_isotonic.csv` scored `3.16529`. The best local OOF result reached so far is about `3.47514`, but online gains have often been smaller than local improvements, so overfitting to local OOF is still a risk.
 
 ## Dataset Shape
 
@@ -39,43 +39,98 @@ Important empirical facts discovered during exploration:
 
 These are the most relevant files to try first.
 
-1. `submission_meta_gate_huber_resid.csv`
-   Current best local OOF after a tiny residual meta-model:
+1. `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
+   Conservative exact-shape residual surface gate:
+   local OOF about `3.47604`; changes 470 test rows versus
+   `submission_value_te_capped_pair02_on_isotonic.csv`.
+
+2. `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
+   More aggressive exact-shape residual surface gate:
+   local OOF about `3.47514`; changes 1402 test rows versus
+   `submission_value_te_capped_pair02_on_isotonic.csv`.
+
+3. `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`
+   Slightly more regularized shape surface:
+   local OOF about `3.47599`; changes 1353 test rows versus
+   `submission_value_te_capped_pair02_on_isotonic.csv`.
+
+4. `submission_value_te_capped_pair02_on_isotonic.csv`
+   Current online-known best:
+   online `3.15321`, local OOF about `3.48296`.
+
+5. `submission_value_te_midopt_pair04_on_isotonic.csv`
+   Pair-token follow-up that was nearly flat online:
+   online `3.15393`, local OOF about `3.48058`.
+
+6. `submission_value_te_column_capped_on_isotonic.csv`
+   Previous online-known best before pair02:
+   online `3.15977`, local OOF about `3.48660`.
+
+7. `submission_value_te_id_heavy_on_isotonic.csv`
+   Earlier conservative value-target-encoding candidate:
+   online `3.24732`, local OOF about `3.54801`.
+
+8. `submission_value_te_column_opt6_on_isotonic.csv`
+   Column-weight-only local optimization:
+   local OOF about `3.48539`; changes 1278 test rows versus current online best.
+
+9. `submission_isotonic_family.csv`
+   Previous online-known best before value target encoding:
+   online `3.38517`, local OOF about `3.67115`.
+
+10. `submission_isotonic_stack_gate.csv`
+   Table-level conservative gate over stacked and isotonic predictions:
+   about `3.66998`
+
+11. `submission_stacked_family_gate.csv`
+   Conservative stacked family gate:
+   about `3.67412`
+
+12. `submission_hist_family_gate.csv`
+   HistGradientBoosting residual expert routed by family:
+   about `3.67469`
+
+10. `submission_meta_gate_family_fallback.csv`
+   Previous best local OOF:
+   about `3.67583`
+
+11. `submission_meta_gate_huber_resid.csv`
+   Tiny residual meta-model on top of the gate:
    about `3.67916`
 
-2. `submission_column_family_gate_shape50_cols80_affine.csv`
+12. `submission_column_family_gate_shape50_cols80_affine.csv`
    Conservative affine-calibrated gate:
    about `3.67961`
 
-3. `submission_column_family_gate_shape50_cols80.csv`
+13. `submission_column_family_gate_shape50_cols80.csv`
    Best uncalibrated nested-gate OOF:
    about `3.67994`
 
-4. `submission_column_family_gate_shape_cols.csv`
+14. `submission_column_family_gate_shape_cols.csv`
    Slightly more conservative two-level gate:
    about `3.68027`
 
-5. `submission_column_family_gate.csv`
+15. `submission_column_family_gate.csv`
    Column-family gate with wider expert pool:
    about `3.68062`
 
-6. `submission_column_family_gate_core.csv`
+16. `submission_column_family_gate_core.csv`
    Conservative column-family gate using only strongest late-stage experts:
    about `3.68616`
 
-7. `submission_latent_final_blend.csv`
+17. `submission_latent_final_blend.csv`
    Previous best local OOF:
    about `3.69370`
 
-8. `submission_lowrank_latent.csv`
+18. `submission_lowrank_latent.csv`
    Low-rank latent residual model only:
    about `3.69431`
 
-9. `submission_rewrite_angle_affine.csv`
+19. `submission_rewrite_angle_affine.csv`
    Best pre-latent template-first route:
    about `3.70057`
 
-10. `submission_grid_surface.csv`
+20. `submission_grid_surface.csv`
    Template surface reconstruction route:
    about `3.70169`
 
@@ -90,7 +145,18 @@ All of these files were checked for:
 
 If continuing immediately, start from:
 
-- `submission_meta_gate_huber_resid.csv`
+- `submission_isotonic_family.csv`
+- `isotonic_family_model.py`
+- `submission_value_te_id_heavy_on_isotonic.csv`
+- `submission_value_te_column_core_on_isotonic.csv`
+- `value_residual_on_isotonic_family.py`
+- `value_residual_target_encoding.py`
+- `isotonic_stack_gate.py`
+- `submission_stacked_family_gate.csv`
+- `stacked_family_gate.py`
+- `hist_residual_family_gate.py`
+- `submission_meta_gate_family_fallback.csv`
+- `meta_gate_family_fallback.py`
 - `meta_gate_residual.py`
 - `column_family_gate.py`
 - `lowrank_latent_residual.py`
@@ -99,6 +165,9 @@ If continuing immediately, start from:
 
 That combination represents the strongest current route plus the best previous fallback.
 Because online gains have lagged local OOF gains before, also keep
+`submission_stacked_family_gate.csv`,
+`submission_hist_family_gate.csv`,
+`submission_meta_gate_huber_resid.csv`,
 `submission_column_family_gate_shape50_cols80_affine.csv`,
 `submission_column_family_gate_core.csv`, and `submission_latent_final_blend.csv`
 as safer comparison submissions.
@@ -333,6 +402,198 @@ Outcome:
 - the submission changes are small relative to the affine gate, but this is
   still a post-processing layer and should be online-validated cautiously
 
+### 11. Family-level fallback after meta model
+
+Files:
+
+- `meta_gate_family_fallback.py`
+- `meta_gate_family_fallback_oof.csv`
+- `submission_meta_gate_family_fallback.csv`
+
+Idea:
+
+- use `submission_meta_gate_huber_resid.csv` as the default prediction
+- do not add more model capacity
+- for `table + predicate columns` families with at least `80` training rows,
+  fall back to `submission_latent_final_blend.csv` whenever latent beats meta
+  by more than a tiny margin on the training side of each fold
+
+Outcome:
+
+- local OOF improved to about `3.67583`
+- only about `1115` of `5000` test rows changed relative to
+  `submission_meta_gate_huber_resid.csv`
+- this is the most efficient recent improvement because it removes unstable
+  corrections rather than fitting another richer model
+
+### 12. HistGradientBoosting residual expert and stacked family gate
+
+Files:
+
+- `hist_residual_family_gate.py`
+- `hist_residual_oof.csv`
+- `submission_hist_residual.csv`
+- `hist_family_gate_oof.csv`
+- `submission_hist_family_gate.csv`
+- `stacked_family_gate.py`
+- `stacked_family_gate_oof.csv`
+- `submission_stacked_family_gate.csv`
+
+Idea:
+
+- switch algorithm family from LightGBM/gates to sklearn
+  `HistGradientBoostingRegressor`
+- train a global residual model on top of `submission_meta_gate_family_fallback`
+- use the hist residual prediction as a new expert in a conservative
+  `table + predicate columns` family router
+- stack the best post-processing experts with a second family router, defaulting
+  to `hist_family_gate` and only switching large stable families
+
+Outcome:
+
+- standalone hist residual did not beat mean OOF, but improved tail percentiles
+- hist family gate improved local OOF to about `3.67469`
+- stacked family gate improved local OOF to about `3.67412`
+- `submission_stacked_family_gate.csv` changes only about `404` rows versus
+  `submission_meta_gate_family_fallback.csv`, so it is a conservative candidate
+
+### 13. Column-family isotonic residual model
+
+Files:
+
+- `isotonic_family_model.py`
+- `isotonic_family_oof.csv`
+- `submission_isotonic_family.csv`
+- `isotonic_stack_gate.py`
+- `isotonic_stack_gate_oof.csv`
+- `submission_isotonic_stack_gate.csv`
+
+Idea:
+
+- stop treating the next step as pure expert routing
+- within each `table + predicate columns` family, compute a 1D selectivity score:
+  the sum of log per-predicate selectivities from column min/max stats
+- fit an `IsotonicRegression` residual curve over that score
+- only apply it to large families with at least `400` training rows, using
+  shrink `0.35` on top of `submission_stacked_family_gate.csv`
+- then optionally use a table-level gate that switches from stacked to isotonic
+  only when a table-combination has at least `800` rows and isotonic beats
+  stacked by margin `0.01` on the training side
+
+Outcome:
+
+- local OOF improved to about `3.67115`
+- the table-level `isotonic_stack_gate` reproduces local OOF about `3.66998`
+- coverage is about `44.5%` of train and `46.1%` of test rows
+- this changes about `2180` test rows versus `submission_stacked_family_gate.csv`
+- it is a more structural algorithmic change than another route over existing
+  submissions, but should still be online-validated against the conservative
+  `submission_stacked_family_gate.csv`
+- the user reported `submission_isotonic_family.csv` online score `3.38517`,
+  slightly better than `submission_meta_gate_huber_resid.csv` at `3.38593`
+
+### 14. Value-level residual target encoding
+
+Files:
+
+- `value_residual_target_encoding.py`
+- `value_residual_on_isotonic_family.py`
+- `value_te_eq_conservative_on_isotonic_oof.csv`
+- `submission_value_te_eq_conservative_on_isotonic.csv`
+- `value_te_eq_on_isotonic_oof.csv`
+- `submission_value_te_eq_on_isotonic.csv`
+- `value_te_id_heavy_on_isotonic_oof.csv`
+- `submission_value_te_id_heavy_on_isotonic.csv`
+- `value_te_column_core_on_isotonic_oof.csv`
+- `submission_value_te_column_core_on_isotonic.csv`
+- `value_te_column_capped_on_isotonic_oof.csv`
+- `submission_value_te_column_capped_on_isotonic.csv`
+- `value_te_capped_pair02_on_isotonic_oof.csv`
+- `submission_value_te_capped_pair02_on_isotonic.csv`
+- `value_te_capped_pair04_on_isotonic_oof.csv`
+- `submission_value_te_capped_pair04_on_isotonic.csv`
+- `value_te_midopt_pair04_on_isotonic_oof.csv`
+- `submission_value_te_midopt_pair04_on_isotonic.csv`
+- `value_te_opt6_pair04_on_isotonic_oof.csv`
+- `submission_value_te_opt6_pair04_on_isotonic.csv`
+
+Idea:
+
+- stop treating equality predicates as uniform selectivity
+- learn cross-fitted residual maps for concrete equality values such as
+  `mk.keyword_id=...`, `mc.company_id=...`, and `t.production_year=...`
+- smooth each token effect toward zero with count smoothing, fit maps only on
+  the training side of each fold, and apply clipped residual corrections
+- produce both broad equality-value variants and column-weighted variants that
+  emphasize high-cardinality entity IDs and avoid columns that hurt OOF
+- after online feedback confirmed the aggressive column-weighted version, add a
+  small pair-token residual (`pair_table`) on top of the capped column model
+
+Outcome:
+
+- online feedback:
+  `submission_value_te_id_heavy_on_isotonic.csv` scored `3.24732`;
+  `submission_value_te_column_capped_on_isotonic.csv` scored `3.15977`
+- direct-on-isotonic variants preserve the latest online-validated base while
+  adding only the new value-hotness signal
+- `submission_value_te_eq_conservative_on_isotonic.csv`:
+  local OOF about `3.60800`, changes 2222 test rows versus isotonic
+- `submission_value_te_eq_on_isotonic.csv`:
+  local OOF about `3.57583`, changes 2235 test rows versus isotonic
+- `submission_value_te_id_heavy_on_isotonic.csv`:
+  local OOF about `3.54801`, changes only 193 test rows versus isotonic
+- `submission_value_te_column_core_on_isotonic.csv`:
+  local OOF about `3.49475`, changes 1351 test rows versus isotonic
+- `submission_value_te_column_capped_on_isotonic.csv`:
+  local OOF about `3.48660`, changes 1351 test rows versus isotonic, online
+  `3.15977`
+- `submission_value_te_capped_pair02_on_isotonic.csv`:
+  local OOF about `3.48296`, changes 1209 test rows versus current online best
+- `submission_value_te_capped_pair04_on_isotonic.csv`:
+  local OOF about `3.48115`, changes 1228 test rows versus current online best
+- `submission_value_te_midopt_pair04_on_isotonic.csv`:
+  local OOF about `3.48058`, changes 2015 test rows versus current online best
+- `submission_value_te_opt6_pair04_on_isotonic.csv`:
+  local OOF about `3.48056`, changes 2040 test rows versus current online best
+- the strongest local non-`on_isotonic` variant is
+  `submission_value_te_column_capped.csv`, local OOF about `3.48444`, but it
+  also changes the base to `isotonic_stack_gate`; use it only as a later probe
+- multi-seed checks showed the equality-value signal is stable across KFold
+  seeds; however, this is a much larger local jump than previous online gains,
+  so it must be leaderboard-validated carefully
+
+### 15. Exact-shape residual surface gate
+
+Files:
+
+- `shape_surface_residual.py`
+- `shape_surface_m50_d2_a10_s0p3_g0p0_oof.csv`
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
+- `shape_surface_m50_d2_a10_s0p3_g0p01_oof.csv`
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
+- `shape_surface_m50_d2_a100_s0p3_g0p0_oof.csv`
+- `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`
+
+Idea:
+
+- move away from more token target-encoding tweaks after pair tokens showed
+  only marginal online improvement
+- within each exact predicate shape, fit a low-dimensional continuous residual
+  surface over normalized predicate values using polynomial Ridge
+- gate the surface at exact-shape level using OOF Q-error; unstable shapes fall
+  back to `submission_value_te_capped_pair02_on_isotonic.csv`
+
+Outcome:
+
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`:
+  local OOF about `3.47604`, only 470 test rows changed versus pair02
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`:
+  local OOF about `3.47514`, 1402 test rows changed versus pair02
+- `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`:
+  local OOF about `3.47599`, 1353 test rows changed versus pair02
+- this is a more genuinely different algorithm than the pair-token variants;
+  submit the conservative `g0p01` first, then the stronger `g0p0` if it helps
+
 ## Best Current Local Results
 
 Approximate OOF means observed:
@@ -367,10 +628,69 @@ Approximate OOF means observed:
 - `submission_meta_gate_huber_resid.csv`:
   about `3.67916`
 
+- `submission_meta_gate_family_fallback.csv`:
+  about `3.67583`
+
+- `submission_hist_family_gate.csv`:
+  about `3.67469`
+
+- `submission_stacked_family_gate.csv`:
+  about `3.67412`
+
+- `submission_isotonic_stack_gate.csv`:
+  about `3.66998`
+
+- `submission_isotonic_family.csv`:
+  about `3.67115`
+
+- `submission_value_te_eq_conservative_on_isotonic.csv`:
+  about `3.60800`
+
+- `submission_value_te_eq_on_isotonic.csv`:
+  about `3.57583`
+
+- `submission_value_te_id_heavy_on_isotonic.csv`:
+  about `3.54801`
+
+- `submission_value_te_column_core_on_isotonic.csv`:
+  about `3.49475`
+
+- `submission_value_te_column_capped_on_isotonic.csv`:
+  about `3.48660`
+
+- `submission_value_te_capped_pair02_on_isotonic.csv`:
+  about `3.48296`
+
+- `submission_value_te_capped_pair04_on_isotonic.csv`:
+  about `3.48115`
+
+- `submission_value_te_capped_pair06_on_isotonic.csv`:
+  about `3.48113`
+
+- `submission_value_te_midopt_pair04_on_isotonic.csv`:
+  about `3.48058`
+
+- `submission_value_te_opt6_pair04_on_isotonic.csv`:
+  about `3.48056`
+
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`:
+  about `3.47604`
+
+- `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`:
+  about `3.47599`
+
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`:
+  about `3.47514`
+
+- `submission_value_te_column_capped.csv`:
+  about `3.48444`
+
 Important:
 
 - online scores improved much less than local OOF
 - small OOF improvements often translated into only ~0.01 online
+- the target-encoding improvements are much larger locally than previous
+  changes; do not assume the full OOF gain will transfer
 - treat local OOF as directional, not authoritative
 
 ## What Failed or Underperformed
@@ -398,14 +718,38 @@ In practice, the strongest new signal came from:
 
 That suggests the hidden structure is real, but our current approximation is still coarse.
 
+2026-05-19 update:
+
+- `submission_isotonic_family.csv` transferred online in the right direction:
+  online score `3.38517`, slightly better than the previous `3.38593`.
+- The biggest new local signal is no longer another booster or expert router.
+  It is concrete predicate-value hotness: equality predicates are not uniform,
+  and repeated values such as `mk.keyword_id=...`, `mc.company_id=...`,
+  `t.production_year=...`, and `mi.info_type_id=...` carry strong residual
+  information.
+- The new target-encoding models are cross-fitted and stable across several
+  KFold seeds, but the local jump is much larger than previous online gains.
+  Treat these as leaderboard candidates to validate carefully, not guaranteed
+  private-score improvements.
+
 ## What To Try Next
 
 If someone continues this work, the best next steps are:
 
-1. Push the low-rank latent route further, but efficiently.
+1. Online-validate the exact-shape residual surface candidates now that pair
+   tokens have plateaued. Recommended order:
+   `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`,
+   then `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`, then
+   `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`.
+
+2. If the value-encoding route transfers, tune it with online feedback:
+   shrink per column, cap maximum log correction, and separate public/private
+   risk between high-cardinality IDs and low-cardinality fields.
+
+3. Push the low-rank latent route further, but efficiently.
    Use smaller/faster SVD sweeps and better residual experts rather than direct Python simulators.
 
-2. Move from global latent factors to per-family latent factors.
+4. Move from global latent factors to per-family latent factors.
    Separate latent spaces for:
    - `title + cast_info`
    - `title + movie_companies`
@@ -413,13 +757,13 @@ If someone continues this work, the best next steps are:
    - `title + movie_keyword`
    and the 3-table combinations built from them.
 
-3. Use stronger interaction tokenization.
+5. Use stronger interaction tokenization.
    Especially:
    - pairwise predicate-bin interactions
    - table-specific value-bin crosses
    - shape-conditioned latent features
 
-4. If external data ever becomes available, reconstruct actual table-level distributions.
+6. If external data ever becomes available, reconstruct actual table-level distributions.
    That would likely dominate all current CSV-only approaches.
 
 ## File Map
@@ -444,6 +788,29 @@ Core scripts worth understanding:
 - `meta_gate_residual.py`
   current best tiny residual model on top of the gate
 
+- `meta_gate_family_fallback.py`
+  current best risk-controlled fallback from meta model to latent model
+
+- `hist_residual_family_gate.py`
+  HistGradientBoosting residual expert plus family router
+
+- `stacked_family_gate.py`
+  current best stacked family router over post-processing experts
+
+- `isotonic_family_model.py`
+  current best structural residual model using monotone selectivity curves
+
+- `isotonic_stack_gate.py`
+  conservative table-level gate that reproduces `isotonic_stack_gate`
+
+- `value_residual_target_encoding.py`
+  cross-fitted value-level residual target encoding on top of
+  `isotonic_stack_gate`
+
+- `value_residual_on_isotonic_family.py`
+  same value-level residual idea on top of the online-validated
+  `submission_isotonic_family.csv`
+
 - `join_distribution_estimator.py`
   useful reference for physical/star-join assumptions
 
@@ -458,6 +825,13 @@ Supporting artifacts:
 
 Most relevant submission files:
 
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
+- `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
+- `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`
+- `submission_value_te_capped_pair02_on_isotonic.csv`
+- `submission_value_te_column_capped_on_isotonic.csv`
+- `submission_value_te_id_heavy_on_isotonic.csv`
+- `submission_isotonic_family.csv`
 - `submission_latent_final_blend.csv`
 - `submission_lowrank_latent.csv`
 - `submission_rewrite_angle_affine.csv`
@@ -474,8 +848,9 @@ Most relevant submission files:
 
 If someone picks this up cold:
 
-- submit `submission_meta_gate_huber_resid.csv` first
-- compare online result to `submission_column_family_gate_shape50_cols80_affine.csv`,
-  `submission_column_family_gate_core.csv`, and `submission_latent_final_blend.csv`
-- if online gain is weak again, continue from `lowrank_latent_residual.py`, not from the older global LightGBM scripts
-- focus on better latent interaction features, not more generic booster tuning
+- current online best is `submission_value_te_capped_pair02_on_isotonic.csv`
+  with score `3.15321`
+- next submit `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
+- if that improves, try `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
+- if shape surfaces do not transfer, the next larger jump likely requires
+  obtaining the original JOB/IMDb tables and doing exact or near-exact counts
