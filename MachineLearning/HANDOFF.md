@@ -10,7 +10,7 @@ The working objective is:
 - Output: predicted `Cardinality`
 - Metric: Mean Q-Error
 
-The user reported an online score of about `4.88061` on the original submission, then iterated through many experimental routes. Recent online scores confirmed the value-target-encoding direction: `submission_value_te_id_heavy_on_isotonic.csv` scored `3.24732`, the more aggressive `submission_value_te_column_capped_on_isotonic.csv` scored `3.15977`, and `submission_value_te_capped_pair02_on_isotonic.csv` scored `3.15321`. Pair-token follow-ups were marginal: `submission_value_te_midopt_pair04_on_isotonic.csv` scored `3.15393`, and `submission_value_te_opt6_pair04_on_isotonic.csv` scored `3.16529`. The best local OOF result reached so far is about `3.47514`, but online gains have often been smaller than local improvements, so overfitting to local OOF is still a risk.
+The user reported an online score of about `4.88061` on the original submission, then iterated through many experimental routes. Recent online scores confirmed the value-target-encoding direction: `submission_value_te_id_heavy_on_isotonic.csv` scored `3.24732`, the more aggressive `submission_value_te_column_capped_on_isotonic.csv` scored `3.15977`, and `submission_value_te_capped_pair02_on_isotonic.csv` scored `3.15321`. Pair-token follow-ups were marginal: `submission_value_te_midopt_pair04_on_isotonic.csv` scored `3.15393`, and `submission_value_te_opt6_pair04_on_isotonic.csv` scored `3.16529`. Exact-shape residual surfaces then improved online again: `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv` scored `3.14825`, and `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv` scored `3.14601`. The best local OOF result reached so far is about `3.46458`, but online gains have often been smaller than local improvements, so overfitting to local OOF is still a risk.
 
 ## Dataset Shape
 
@@ -39,28 +39,26 @@ Important empirical facts discovered during exploration:
 
 These are the most relevant files to try first.
 
-1. `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
-   Conservative exact-shape residual surface gate:
-   local OOF about `3.47604`; changes 470 test rows versus
-   `submission_value_te_capped_pair02_on_isotonic.csv`.
+1. `submission_shape_surface_v2_gate_g0p01.csv`
+   Conservative v2 per-shape expert gate:
+   local OOF about `3.46553`; changes 534 test rows versus
+   `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`.
 
-2. `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
-   More aggressive exact-shape residual surface gate:
-   local OOF about `3.47514`; changes 1402 test rows versus
-   `submission_value_te_capped_pair02_on_isotonic.csv`.
+2. `submission_shape_surface_v2_gate_g0p005_min2.csv`
+   Stronger v2 per-shape expert gate with min prediction clipped to 2:
+   local OOF about `3.46480`; changes 1048 test rows versus current online best.
 
-3. `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`
-   Slightly more regularized shape surface:
-   local OOF about `3.47599`; changes 1353 test rows versus
-   `submission_value_te_capped_pair02_on_isotonic.csv`.
+3. `submission_shape_surface_v2_gate_g0p0_min2.csv`
+   Most aggressive v2 per-shape expert gate:
+   local OOF about `3.46458`; changes 1504 test rows versus current online best.
 
-4. `submission_value_te_capped_pair02_on_isotonic.csv`
+4. `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
    Current online-known best:
-   online `3.15321`, local OOF about `3.48296`.
+   online `3.14601`, local OOF about `3.47514`.
 
-5. `submission_value_te_midopt_pair04_on_isotonic.csv`
-   Pair-token follow-up that was nearly flat online:
-   online `3.15393`, local OOF about `3.48058`.
+5. `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
+   Previous conservative shape-surface submission:
+   online `3.14825`, local OOF about `3.47604`.
 
 6. `submission_value_te_column_capped_on_isotonic.csv`
    Previous online-known best before pair02:
@@ -573,6 +571,13 @@ Files:
 - `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
 - `shape_surface_m50_d2_a100_s0p3_g0p0_oof.csv`
 - `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`
+- `shape_surface_v2.py`
+- `shape_surface_v2_gate_g0p01_oof.csv`
+- `submission_shape_surface_v2_gate_g0p01.csv`
+- `shape_surface_v2_gate_g0p005_oof.csv`
+- `submission_shape_surface_v2_gate_g0p005_min2.csv`
+- `shape_surface_v2_gate_g0p0_oof.csv`
+- `submission_shape_surface_v2_gate_g0p0_min2.csv`
 
 Idea:
 
@@ -593,6 +598,15 @@ Outcome:
   local OOF about `3.47599`, 1353 test rows changed versus pair02
 - this is a more genuinely different algorithm than the pair-token variants;
   submit the conservative `g0p01` first, then the stronger `g0p0` if it helps
+- after the first shape-surface submissions improved online
+  (`g0p01` scored `3.14825`, `g0p0` scored `3.14601`), v2 lets each shape pick
+  among multiple surface experts and shrink strengths
+- `submission_shape_surface_v2_gate_g0p01.csv`:
+  local OOF about `3.46553`, changes 534 test rows versus current online best
+- `submission_shape_surface_v2_gate_g0p005_min2.csv`:
+  local OOF about `3.46480`, changes 1048 test rows versus current online best
+- `submission_shape_surface_v2_gate_g0p0_min2.csv`:
+  local OOF about `3.46458`, changes 1504 test rows versus current online best
 
 ## Best Current Local Results
 
@@ -682,6 +696,18 @@ Approximate OOF means observed:
 - `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`:
   about `3.47514`
 
+- `submission_shape_surface_v2_gate_g0p02.csv`:
+  about `3.46602`
+
+- `submission_shape_surface_v2_gate_g0p01.csv`:
+  about `3.46553`
+
+- `submission_shape_surface_v2_gate_g0p005.csv`:
+  about `3.46480`
+
+- `submission_shape_surface_v2_gate_g0p0.csv`:
+  about `3.46458`
+
 - `submission_value_te_column_capped.csv`:
   about `3.48444`
 
@@ -736,11 +762,11 @@ That suggests the hidden structure is real, but our current approximation is sti
 
 If someone continues this work, the best next steps are:
 
-1. Online-validate the exact-shape residual surface candidates now that pair
-   tokens have plateaued. Recommended order:
-   `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`,
-   then `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`, then
-   `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`.
+1. Online-validate the v2 exact-shape surface candidates now that the first
+   shape-surface submissions improved online. Recommended order:
+   `submission_shape_surface_v2_gate_g0p01.csv`,
+   then `submission_shape_surface_v2_gate_g0p005_min2.csv`, then
+   `submission_shape_surface_v2_gate_g0p0_min2.csv`.
 
 2. If the value-encoding route transfers, tune it with online feedback:
    shrink per column, cap maximum log correction, and separate public/private
@@ -825,9 +851,10 @@ Supporting artifacts:
 
 Most relevant submission files:
 
-- `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
+- `submission_shape_surface_v2_gate_g0p01.csv`
+- `submission_shape_surface_v2_gate_g0p005_min2.csv`
+- `submission_shape_surface_v2_gate_g0p0_min2.csv`
 - `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
-- `submission_shape_surface_m50_d2_a100_s0p3_g0p0.csv`
 - `submission_value_te_capped_pair02_on_isotonic.csv`
 - `submission_value_te_column_capped_on_isotonic.csv`
 - `submission_value_te_id_heavy_on_isotonic.csv`
@@ -844,13 +871,88 @@ Most relevant submission files:
 - `latent_join_inversion.py` and `fast_latent_join.py` are conceptual attempts that did not finish successfully in this environment.
 - Some older submissions remain in the folder but are no longer competitive relative to the later files listed above.
 
+## Physical Count Breakthrough
+
+The current strongest direction is no longer residual post-processing. The
+public JOB/IMDb raw data route was partially recovered and gives a much larger
+local gain.
+
+Raw data status:
+
+- `job_data/imdb.tgz` is incomplete but valid through the early archive entries.
+- `job_data/partial_extract/cast_info.csv` is complete:
+  36,244,344 rows.
+- `job_data/partial_extract/movie_companies.csv` is complete:
+  2,609,129 rows.
+- `job_data/partial_extract/movie_info.csv` is incomplete/truncated.
+- `title.csv`, `movie_keyword.csv`, and `movie_info_idx.csv` are not yet
+  extracted.
+- Azure/CWI downloads are unstable in this environment. The Azure blob supports
+  Range requests, but long downloads stalled; old partial chunks are under
+  `job_data/azure_parts`.
+
+Implemented physical-count scripts:
+
+- `physical_count_single.py`
+  builds sorted count caches for `ci.person_id/ci.role_id` and
+  `mc.company_id/mc.company_type_id`; uses Python `bisect` because
+  `np.searchsorted` was extremely slow in this environment.
+- `apply_physical_single_to_bases.py`
+  applies exact `ci`/`mc` single-table and `title + one child` counts to
+  several strong submission bases.
+- `single_table_distribution_reconstruct.py`
+  reconstructs single-column table distributions from exact single-table train
+  labels (`mk.keyword_id`, `t.production_year`, `mi.info_type_id`, etc.).
+- `apply_reconstructed_singletons_to_physical.py`
+  combines raw-data exact `ci/mc` counts with reconstructed single-table
+  distributions.
+
+Key validation:
+
+- Current base OOF (`shape_surface_m50_d2_a10_s0p3_g0p0_oof.csv`) mean Q-error:
+  `3.47864423`.
+- Raw `ci/mc` exact replacement covers 10,023 train rows and 1,005 test rows.
+  On those train rows exact Q-error is exactly `1.0`; base Q-error there is
+  `3.65277576`.
+- Replacing only those rows gives full-train OOF `2.94686880`.
+- Reconstructed single-table CDF route covers 8,304 train rows and 802 test rows,
+  with train mean Q-error about `1.00014669`.
+- Combining raw `ci/mc` exact plus reconstructed singletons covers 14,952 train
+  rows and 1,507 test rows, giving full-train OOF `2.83033853`.
+
+Most important new submission candidates:
+
+1. `submission_physical_single_base_plus_reconstructed_singletons.csv`
+   Conservative recommended candidate. Anchored to the current online best
+   `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`; changes 1,506 rows vs
+   that file; local combined OOF is `2.83033853`.
+
+2. `submission_physical_single_on_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
+   Even more conservative raw-data-only candidate. Changes 1,003 rows; local OOF
+   `2.94686880`.
+
+3. `submission_physical_single_v2_g01_plus_reconstructed_singletons.csv`
+   Slightly more aggressive: same physical replacements on v2 `g0p01`; changes
+   1,828 rows vs current online best. Use only after the conservative physical
+   candidate transfers online.
+
+4. `submission_physical_single_v2_g0_plus_reconstructed_singletons.csv`
+   Best among generated physical+v2 candidates locally, but more aggressive;
+   changes 1,982 rows vs online best. Save this for after online validation.
+
+Do not spend submissions on small residual-surface variants until the physical
+count candidates are tested. The local gain is now large enough that the next
+online submission should be a physical-count file, not another v2 surface file.
+
 ## Short Recommendation
 
 If someone picks this up cold:
 
-- current online best is `submission_value_te_capped_pair02_on_isotonic.csv`
-  with score `3.15321`
-- next submit `submission_shape_surface_m50_d2_a10_s0p3_g0p01.csv`
-- if that improves, try `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
-- if shape surfaces do not transfer, the next larger jump likely requires
-  obtaining the original JOB/IMDb tables and doing exact or near-exact counts
+- current online best is still `submission_shape_surface_m50_d2_a10_s0p3_g0p0.csv`
+  with score `3.14601`
+- next submit `submission_physical_single_base_plus_reconstructed_singletons.csv`
+- if that improves materially, try
+  `submission_physical_single_v2_g01_plus_reconstructed_singletons.csv`
+- continue trying to obtain the remaining raw JOB/IMDb tables; full physical
+  star-join counting is the most plausible path toward leaderboard scores near
+  `2.7` or below

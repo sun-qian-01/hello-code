@@ -1,0 +1,11 @@
+# Local datasets and generated artifacts
+MachineLearning/job_data/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Large binary/archive artifacts
+*.bin
+*.npy
+*.tgz
