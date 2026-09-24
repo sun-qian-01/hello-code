@@ -1,0 +1,7 @@
+commodity_no commodity_class commodity_name commodity_price commodity_quantity
+1 food apple 5 50
+2 food dumplings 2 99
+3 food mooncakes 5 40
+4 electronics phone 800 10
+5 electronics cellphone 100 30
+6 electronics keyboard 200 20

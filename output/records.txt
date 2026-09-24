@@ -1,0 +1,3 @@
+commodity_no commodity_name commodity_class op_type operator time quantity
+1 apple food buy sq 2026-09-24_19:20:48 30
+2 dumplings food sell sq 2026-09-24_19:21:39 1
